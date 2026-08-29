@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://peds01jax001"]
+
+[ext_resource type="Script" path="res://scripts/npc/pedestrian.gd" id="1"]
+
+[node name="Pedestrian" type="CharacterBody3D"]
+script = ExtResource("1")
