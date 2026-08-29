@@ -1,0 +1,20 @@
+# Godot 4
+.godot/
+*.translation
+# Imported / cache artifacts generated at build time
+*.tres.unused
+*.import
+
+# Runtime-generated game data (imports, save files, minimap PNG)
+user://
+export.cfg
+
+# OS / editor
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Keep sample OSM datasets checked in
+!import_data/osm/sample.osm
+!import_data/osm/sample.json

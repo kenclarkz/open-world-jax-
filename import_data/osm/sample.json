@@ -1,0 +1,16 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API",
+  "elements": [
+    { "type": "node", "id": 10, "lat": 30.3322, "lon": -81.6557, "tags": { "amenity": "restaurant", "name": "Overpass Cafe" } },
+    { "type": "node", "id": 11, "lat": 30.333, "lon": -81.6557 },
+    { "type": "node", "id": 12, "lat": 30.333, "lon": -81.6549 },
+    { "type": "node", "id": 13, "lat": 30.3322, "lon": -81.6549 },
+    { "type": "node", "id": 20, "lat": 30.332, "lon": -81.656 },
+    { "type": "node", "id": 21, "lat": 30.3332, "lon": -81.656 },
+    { "type": "way", "id": 100, "nodes": [20, 21], "tags": { "highway": "primary", "name": "Overpass Ave" } },
+    { "type": "way", "id": 101, "nodes": [10, 11, 12, 13, 10], "tags": { "building": "yes", "building:levels": "3", "name": "Overpass Building" } },
+    { "type": "way", "id": 102, "nodes": [13, 12, 21, 20, 13], "tags": { "leisure": "park", "name": "Overpass Park" } },
+    { "type": "way", "id": 103, "nodes": [10, 11, 12, 13, 10], "tags": { "natural": "water", "name": "Overpass Pond" } }
+  ]
+}
