@@ -101,3 +101,11 @@ pointing/emulate_touch_from_mouse=true
 
 renderer/rendering_method="forward_plus"
 environment/defaults/default_clear_color=Color(0.4, 0.6, 0.85, 1)
+
+[streaming]
+
+tile_size=500.0
+stream_radius=2
+unload_radius=3
+background_load=true
+max_instances_per_frame=2

@@ -52,7 +52,7 @@ func _ready() -> void:
 		# Built-in playable prototype district (downtown JAX) so the game
 		# runs with zero downloaded data. Replaced once OSM is imported.
 		data = PrototypeGen.generate()
-	World.osm_data = data
+	World.set_world_data(data, terrain)
 	World.prototype_mode = (osm_path == "")
 
 	# Teleport to an interesting spot if no save: use city center.
@@ -62,8 +62,8 @@ func _ready() -> void:
 		player.camera_rig.global_position = spawn
 		print("[Main] Spawned at ", spawn)
 
-	# Initial streaming so tiles exist before first player move.
-	TileStreamer._update_streaming(World.tile_key_from_pos(player.global_position))
+	# Initial streaming so chunks exist before first player move.
+	TileStreamer.refresh()
 
 	# Spawn traffic + pedestrians around the player after streaming.
 	call_deferred("_spawn_npcs_around", player.global_position)

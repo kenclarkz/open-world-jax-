@@ -4,8 +4,6 @@ extends Node
 ## and collision: terrain, building footprints, water surfaces, roads and
 ## parks as ground polygons.
 
-const TILE_SIZE := 500.0
-
 # ---------------------------------------------------------------------------
 # Terrain sampling
 # ---------------------------------------------------------------------------
@@ -101,13 +99,55 @@ func terrain_collision(origin: Vector3, tile_size: float, terrain: Dictionary) -
 # Building mesh + collision
 # ---------------------------------------------------------------------------
 
-func _poly_floor(poly: PackedVector2Array, terrain: Dictionary) -> float:
+func poly_floor_height(poly: PackedVector2Array, terrain: Dictionary) -> float:
 	if poly.is_empty():
 		return 0.0
 	var sum := Vector2.ZERO
 	for p in poly:
 		sum += p
 	return terrain_height(terrain, Vector3(sum.x / poly.size(), 0, sum.y / poly.size()))
+
+func _poly_floor(poly: PackedVector2Array, terrain: Dictionary) -> float:
+	return poly_floor_height(poly, terrain)
+
+# ---------------------------------------------------------------------------
+# Pure geometry helpers (no server / no terrain) usable from a worker thread.
+# ---------------------------------------------------------------------------
+
+## Clip a segment (in XZ, Vector3 y is ignored) to a rectangle and return
+## the clipped endpoints, or an empty PackedVector3Array if it misses.
+## Liang-Barsky against an axis-aligned rectangle.
+static func clip_seg_to_rect(a: Vector3, b: Vector3, rect: Rect2) -> PackedVector3Array:
+	var a0 := Vector2(a.x, a.z)
+	var a1 := Vector2(b.x, b.z)
+	var dx := a1.x - a0.x
+	var dy := a1.y - a0.y
+	var p := [-dx, dx, -dy, dy]
+	var q := [
+		a0.x - rect.position.x,
+		rect.position.x + rect.size.x - a0.x,
+		a0.y - rect.position.y,
+		rect.position.y + rect.size.y - a0.y,
+	]
+	var u1 := 0.0
+	var u2 := 1.0
+	for i in 4:
+		var pi: float = p[i]
+		var qi: float = q[i]
+		if absf(pi) < 1e-9:
+			if qi < 0.0:
+				return PackedVector3Array()
+		else:
+			var t: float = qi / pi
+			if pi < 0.0:
+				u1 = maxf(u1, t)
+			else:
+				u2 = minf(u2, t)
+	if u1 > u2:
+		return PackedVector3Array()
+	var s0: Vector2 = a0 + (a1 - a0) * u1
+	var s1: Vector2 = a0 + (a1 - a0) * u2
+	return PackedVector3Array([Vector3(s0.x, 0.0, s0.y), Vector3(s1.x, 0.0, s1.y)])
 
 ## Extrude a footprint into a mesh with top, bottom and walls.
 func building_mesh(poly: PackedVector2Array, height: float, terrain: Dictionary) -> ArrayMesh:
@@ -130,7 +170,7 @@ func building_mesh(poly: PackedVector2Array, height: float, terrain: Dictionary)
 		_append.call(v0, col); _append.call(v2, col); _append.call(v1, col)
 		_append.call(v0, col); _append.call(v3, col); _append.call(v2, col)
 	# Roof.
-	var tris := _triangulate(poly)
+	var tris := triangulate(poly)
 	var roof_col := col.lightened(0.15)
 	for t in tris:
 		_append.call(Vector3(t[0].x, height + floor_h, t[0].y), roof_col)
@@ -184,7 +224,7 @@ func flat_poly_mesh(poly: PackedVector2Array, terrain: Dictionary, col: Color, l
 	if poly.size() < 3:
 		return null
 	var floor_h := _poly_floor(poly, terrain) + lift
-	var tris := _triangulate(poly)
+	var tris := triangulate(poly)
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
 	var verts := PackedVector3Array()
@@ -234,7 +274,7 @@ func road_mesh(points: PackedVector3Array, width: float, col: Color) -> ArrayMes
 # Polygon triangulation (ear clipping)
 # ---------------------------------------------------------------------------
 
-func _triangulate(poly: PackedVector2Array) -> Array:
+func triangulate(poly: PackedVector2Array) -> Array:
 	var result: Array = []
 	if poly.size() < 3:
 		return result

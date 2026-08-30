@@ -7,6 +7,7 @@ extends CanvasLayer
 var _pos_label: Label
 var _info_label: Label
 var _speed_label: Label
+var _stream_label: Label
 
 func _ready() -> void:
 	var root := Control.new()
@@ -34,6 +35,12 @@ func _ready() -> void:
 	_speed_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	_speed_label.add_theme_constant_override("outline_size", 6)
 	vbox.add_child(_speed_label)
+
+	_stream_label = Label.new()
+	_stream_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.7, 0.9))
+	_stream_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_stream_label.add_theme_constant_override("outline_size", 6)
+	vbox.add_child(_stream_label)
 
 	_info_label = Label.new()
 	_info_label.add_theme_color_override("font_color", Color(0.9, 0.9, 1, 0.85))
@@ -77,3 +84,16 @@ func _process(_delta: float) -> void:
 	var weather_str := Game.current_weather
 	_info_label.text = "Time %02d:%02d   Weather: %s   Tiles: %d" % [
 		hour, mins, weather_str, TileStreamer.loaded_tiles()]
+
+	var chunk := TileStreamer.current_chunk_key()
+	var radius := TileStreamer.stream_radius
+	var streams := "Streaming chunk (%d, %d)  |  %d m  |  R %d" % [chunk.x, chunk.y, int(TileStreamer.tile_size), radius]
+	if TileStreamer.unload_radius != radius:
+		streams += "/%d" % TileStreamer.unload_radius
+	_stream_label.text = "%s\nLoaded %d  |  loading %d  |  unloading %d  |  tracked %d\nActive objects ~%d" % [
+		streams,
+		TileStreamer.loaded_chunk_count(),
+		TileStreamer.loading_chunk_count(),
+		TileStreamer.unloading_chunk_count(),
+		TileStreamer.tracked_chunk_count(),
+		TileStreamer.active_object_count()]
