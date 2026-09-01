@@ -119,16 +119,26 @@ func building_mesh(poly: PackedVector2Array, height: float, terrain: Dictionary)
 		verts.append(v)
 		colors.append(c)
 
-	# Walls (two triangles per face).
+	# Walls (two triangles per face) with a simple checker "window" banding
+	# so buildings read as skyscrapers/downtown even at low resolution.
+	var win_col := col.darkened(0.55)
+	var win_h := 1.4   # window band height
+	var win_gap := 1.0 # band separation
+	var floors := maxi(1, int(height / (win_h + win_gap)))
 	for i in range(poly.size()):
 		var a := poly[i]
 		var b := poly[(i + 1) % poly.size()]
-		var v0 := Vector3(a.x, floor_h, a.y)
-		var v1 := Vector3(b.x, floor_h, b.y)
-		var v2 := Vector3(b.x, height + floor_h, b.y)
-		var v3 := Vector3(a.x, height + floor_h, a.y)
-		_append.call(v0, col); _append.call(v2, col); _append.call(v1, col)
-		_append.call(v0, col); _append.call(v3, col); _append.call(v2, col)
+		for f in range(floors):
+			var y0 := floor_h + f * (win_h + win_gap)
+			var y1 := y0 + win_h
+			var v0 := Vector3(a.x, y0, a.y)
+			var v1 := Vector3(b.x, y0, b.y)
+			var v2 := Vector3(b.x, y1, b.y)
+			var v3 := Vector3(a.x, y1, a.y)
+			var use_win := (i + f) % 2 == 0
+			var c := win_col if use_win else col
+			_append.call(v0, c); _append.call(v2, c); _append.call(v1, c)
+			_append.call(v0, c); _append.call(v3, c); _append.call(v2, c)
 	# Roof.
 	var tris := _triangulate(poly)
 	var roof_col := col.lightened(0.15)
